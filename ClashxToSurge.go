@@ -41,8 +41,10 @@ func main() {
 	var blackKeys string
 	var isHelp bool
 	flag.StringVar(&url, "url", "", "订阅地址")
+
 	flag.StringVar(&blackKeys, "blackKeys", "", "黑名单关键词")
 	flag.BoolVar(&isHelp, "help", false, "帮助文档")
+	flag.Parse()
 	if isHelp {
 		flag.Usage()
 		return
@@ -51,7 +53,6 @@ func main() {
 		flag.Usage()
 		return
 	}
-	flag.Parse()
 	//flag.Usage()
 	keys := strings.Split(blackKeys, ",")
 	resp, err := http.Get(url)
@@ -70,7 +71,7 @@ func main() {
 		for _, p := range conf.Proxy {
 			var inBlack = false
 			for _, k := range keys {
-				if strings.Contains(p.Name, k) {
+				if len(k) > 0 && strings.Contains(p.Name, k) {
 					inBlack = true
 				}
 
