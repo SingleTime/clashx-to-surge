@@ -4,7 +4,7 @@
     
     
 # 使用
-    下载[执行文件](https://github.com/SingleTime/clashx-to-surge/releases/download/1.0/ClashxToSurge)
+    下载[执行文件](https://github.com/SingleTime/clashx-to-surge/releases/download/1.1/ClashxToSurge)
     
    
    ```shell script
