@@ -1,10 +1,12 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"gopkg.in/yaml.v2"
 	"net/http"
 	"os"
+	"strings"
 )
 
 type ClashXConfig struct {
@@ -35,13 +37,23 @@ type ProxyGroup struct {
 }
 
 func main() {
-	url := ""
-	for idx, args := range os.Args {
-		//fmt.Println("参数" + strconv.Itoa(idx) + ":", args)
-		if idx == 1 {
-			url = args
-		}
+	var url string
+	var blackKeys string
+	var isHelp bool
+	flag.StringVar(&url, "url", "", "订阅地址")
+	flag.StringVar(&blackKeys, "blackKeys", "", "黑名单关键词")
+	flag.BoolVar(&isHelp, "help", false, "帮助文档")
+	if isHelp {
+		flag.Usage()
+		return
 	}
+	if url == "" {
+		flag.Usage()
+		return
+	}
+	flag.Parse()
+	//flag.Usage()
+	keys := strings.Split(blackKeys, ",")
 	resp, err := http.Get(url)
 	conf := &ClashXConfig{}
 	if err != nil {
@@ -50,11 +62,28 @@ func main() {
 	} else {
 		defer resp.Body.Close()
 
-		yaml.NewDecoder(resp.Body).Decode(conf)
+		err := yaml.NewDecoder(resp.Body).Decode(conf)
+		if err != nil {
+			// handle error
+			fmt.Print(err.Error())
+		}
 		for _, p := range conf.Proxy {
-			s := p.Name + " = " + p.Type + ", " + p.Server + ", " + p.Port + ", username=" + p.Uuid + ", tls=false, ws-path=/v2, ws-headers=alterId:2|X-Header-2:value"
-			//println(s)
-			fmt.Fprintln(os.Stdout, s)
+			var inBlack = false
+			for _, k := range keys {
+				if strings.Contains(p.Name, k) {
+					inBlack = true
+				}
+
+			}
+			if !inBlack {
+				s := p.Name + " = " + p.Type + ", " + p.Server + ", " + p.Port + ", username=" + p.Uuid + ", tls=false, ws-path=/v2, ws-headers=alterId:2|X-Header-2:value"
+				//println(s)
+				_, err := fmt.Fprintln(os.Stdout, s)
+				if err != nil {
+					// handle error
+					fmt.Print(err.Error())
+				}
+			}
 		}
 	}
 }
